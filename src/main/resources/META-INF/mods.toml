@@ -27,18 +27,16 @@ displayName="InfiniDrill" #mandatory
 # A URL for the "homepage" for this mod, displayed in the mod UI
 #displayURL="https://change.me.to.your.mods.homepage.example.invalid/" #optional
 # A file name (in the root of the mod JAR) containing a logo for display
-logoFile="examplemod.png" #optional
+logoFile="637936068355887293.png" #optional
 # A text field displayed in the mod UI
 credits="Latenighters" #optional
 # A text field displayed in the mod UI
 authors="draz and luna" #optional
 # The description text for the mod (multi line!) (#mandatory)
 description='''
-This is a long form description of the mod. You can write whatever you want here
+Simple mod that adds a lightweight mixin to emulate the behavior of the Create hose pulley using the Create drill.
 
-Have some lorem ipsum.
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mollis lacinia magna. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Sed sagittis luctus odio eu tempus. Interdum et malesuada fames ac ante ipsum primis in faucibus. Pellentesque volutpat ligula eget lacus auctor sagittis. In hac habitasse platea dictumst. Nunc gravida elit vitae sem vehicula efficitur. Donec mattis ipsum et arcu lobortis, eleifend sagittis sem rutrum. Cras pharetra quam eget posuere fermentum. Sed id tincidunt justo. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+By default, the number of ores in a 5x5 chunk area surrounding the drill must by higher than 10,000 for it to be considered infinite.  When it is infinite, the drill will "mine" the ore block but not actually break it.  The threshold for infinite ores as well as an ore blacklist are configurable via a config file.  Under the hood, scanning for ores is done per-chunk, in another thread, and is cached for small amount of time - this means that using many drills has the same impact as using a single one, and the impact on performance should be negligible.
 '''
 # A dependency - use the . to indicate dependency for a specific modid. Dependencies are optional.
 [[dependencies.infinidrill]] #optional
