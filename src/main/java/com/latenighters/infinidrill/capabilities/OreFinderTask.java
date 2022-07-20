@@ -4,13 +4,16 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import org.apache.http.concurrent.BasicFuture;
 import org.checkerframework.checker.units.qual.A;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -22,6 +25,7 @@ public class OreFinderTask extends Thread {
     private final Block target;
     private final AtomicInteger count = new AtomicInteger(0);
     private final AtomicBoolean cancelled = new AtomicBoolean(false);
+    private final Set<BlockPos> ignoreList;
 
     public void cancel() {
         cancelled.set(true);
@@ -37,14 +41,25 @@ public class OreFinderTask extends Thread {
     private final List<Consumer<Integer>> callbacks = new ArrayList<>();
 
 
-    public OreFinderTask(List<LevelChunk> chunks, Block target) {
+    public OreFinderTask(List<LevelChunk> chunks, Block target, Set<BlockPos> ignoreList) {
         this.chunks = chunks;
         this.target = target;
+        if(ignoreList!=null)
+            this.ignoreList = ignoreList;
+        else
+            this.ignoreList = new HashSet<>();
+    }
+
+    public OreFinderTask(List<LevelChunk> chunks, Block target) {
+        this(chunks, target, null);
     }
 
     @Override
     public void run() {
+
+
         for (LevelChunk chunk:chunks) {
+            BlockPos chunkPos = chunk.getPos().getWorldPosition();
             for(int y=-63; y<128; y++){
                 if(cancelled.get()) {
                     finish(count.get());
@@ -52,8 +67,10 @@ public class OreFinderTask extends Thread {
                 }
                 for(int x=0; x<16; x++){
                     for(int z=0; z<16; z++){
-                        if(chunk.getBlockState(new BlockPos(x, y, z)).getBlock().equals(target))
-                            count.getAndIncrement();
+                        BlockState blockState = chunk.getBlockState(new BlockPos(x, y, z));
+                        if(blockState.getBlock().equals(target))
+                            if(!ignoreList.contains((new BlockPos(x, y, z)).offset(chunkPos)))
+                                count.getAndIncrement();
                     }
                 }
             }

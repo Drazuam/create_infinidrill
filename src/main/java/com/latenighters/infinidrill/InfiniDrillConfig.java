@@ -1,22 +1,26 @@
 package com.latenighters.infinidrill;
 
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.Block;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Mod.EventBusSubscriber
 public class InfiniDrillConfig{
 
     public static final ForgeConfigSpec GENERAL_SPEC;
-    public static ForgeConfigSpec.IntValue infiniteOreThreshold;
-    public static ForgeConfigSpec.ConfigValue<List<? extends String>> blacklisted_ores;
+    private static ForgeConfigSpec.IntValue infiniteOreThreshold;
+    private static ForgeConfigSpec.ConfigValue<List<? extends String>> blacklistedOreNames;
+    private static ForgeConfigSpec.BooleanValue naturalOnly;
 
-    public static final ArrayList<Runnable> updateCallbacks = new ArrayList<>();
+    private static List<Block> blacklistedOres = new ArrayList<>();
+
 
     static {
         ForgeConfigSpec.Builder configBuilder = new ForgeConfigSpec.Builder();
@@ -28,18 +32,48 @@ public class InfiniDrillConfig{
         infiniteOreThreshold = builder
                 .comment("When the number of ores in a 5x5 chunk goes above this number, the vein is infinite")
                 .defineInRange("infinite_ore_threshold", 10000, 0, 1000000);
-        blacklisted_ores = builder
+        blacklistedOreNames = builder
                 .comment("The ores to be ignored by the infinite drill function")
                 .defineList("blacklisted_ores", List.of(), entry -> true);
+        naturalOnly = builder
+                .comment("If set to true, only naturally generated ores will count towards the threshold")
+                .define("natural_ore_only", true);
     }
 
     @SubscribeEvent
     public static void onConfigLoad(ModConfigEvent.Loading event){
-        updateCallbacks.forEach(Runnable::run);
+        reloadOres();
     }
 
     @SubscribeEvent
     public static void onConfigReload(ModConfigEvent.Reloading event){
-        updateCallbacks.forEach(Runnable::run);
+        reloadOres();
+    }
+
+
+    private static void reloadOres(){
+        blacklistedOres = new ArrayList<>();
+        InfiniDrillConfig.blacklistedOreNames.get().forEach(string->{
+            ResourceLocation rsl = new ResourceLocation(string);
+            if (ForgeRegistries.BLOCKS.containsKey(rsl)){
+                blacklistedOres.add(ForgeRegistries.BLOCKS.getValue(rsl));
+            }
+        });
+    }
+
+    public static Integer getInfiniteOreThreshold() {
+        return infiniteOreThreshold.get();
+    }
+
+    public static List<Block> getBlacklistedOres() {
+        return blacklistedOres;
+    }
+
+    public static Boolean isNaturalOnly(){
+        return naturalOnly.get();
+    }
+
+    public static Integer getScanRadius(){
+        return 2;
     }
 }
