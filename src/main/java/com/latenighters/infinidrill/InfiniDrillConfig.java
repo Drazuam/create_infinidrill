@@ -19,6 +19,9 @@ public class InfiniDrillConfig{
     private static ForgeConfigSpec.ConfigValue<List<? extends String>> blacklistedOreNames;
     private static ForgeConfigSpec.BooleanValue naturalOnly;
 
+    private static ForgeConfigSpec.DoubleValue speedMultiplier;
+    private static ForgeConfigSpec.DoubleValue stressMultiplier;
+
     private static List<Block> blacklistedOres = new ArrayList<>();
 
 
@@ -38,6 +41,12 @@ public class InfiniDrillConfig{
         naturalOnly = builder
                 .comment("If set to true, only naturally generated ores will count towards the threshold")
                 .define("natural_ore_only", true);
+        speedMultiplier = builder
+                .comment("This multiplier is added to the breaking speed of a block when infini-drilling")
+                .defineInRange("speed_multiplier", 0.5, 0.01, 10);
+        stressMultiplier = builder
+                .comment("This multiplier is added to the stress requirement of the drill when infini-drilling")
+                .defineInRange("stress_multiplier", 4, 0.01, 1024);
     }
 
     @SubscribeEvent
@@ -71,6 +80,14 @@ public class InfiniDrillConfig{
 
     public static Boolean isNaturalOnly(){
         return naturalOnly.get();
+    }
+
+    public static Double getStressMultiplier(){
+        return stressMultiplier.get();
+    }
+
+    public static Double getSpeedMultiplier(){
+        return speedMultiplier.get();
     }
 
     public static Integer getScanRadius(){

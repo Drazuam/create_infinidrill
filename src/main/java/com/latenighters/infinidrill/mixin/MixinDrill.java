@@ -8,12 +8,8 @@ import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.utility.VecHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.Tag;
-import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
@@ -27,15 +23,10 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.tags.ITag;
 import org.spongepowered.asm.mixin.Mixin;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
 
 @Mixin(DrillTileEntity.class)
 public abstract class MixinDrill extends BlockBreakingKineticTileEntity {
@@ -126,6 +117,8 @@ public abstract class MixinDrill extends BlockBreakingKineticTileEntity {
 
     private LazyOptional<Boolean> isInfinite(){
 
+        if(this.breakingPos==null) return LazyOptional.empty();
+
         if(InfiniDrillConfig.getBlacklistedOres().contains(this.level.getBlockState(this.breakingPos).getBlock()))
             return LazyOptional.of(()->false);
 
@@ -146,5 +139,29 @@ public abstract class MixinDrill extends BlockBreakingKineticTileEntity {
         return infinite.get();
     }
 
+    @Override
+    protected float getBreakSpeed() {
+        AtomicReference<Float> speed = new AtomicReference<>(Math.abs(this.getSpeed() / 100.0F));
 
+        isInfinite().ifPresent(inf -> {
+            if(inf){
+                speed.set((float) Math.abs(this.getSpeed() / 100.0F * InfiniDrillConfig.getSpeedMultiplier()));
+            }
+        });
+
+        return speed.get();
+    }
+
+    @Override
+    public float calculateStressApplied() {
+        AtomicReference<Float> impact = new AtomicReference<>(super.calculateStressApplied());
+
+        isInfinite().ifPresent(inf -> {
+            if(inf){
+                impact.set((float) (impact.get() * InfiniDrillConfig.getStressMultiplier()));
+            }
+        });
+
+        return impact.get();
+    }
 }
