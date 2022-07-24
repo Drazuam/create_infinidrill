@@ -3,6 +3,7 @@ package com.latenighters.infinidrill;
 import com.latenighters.infinidrill.capabilities.CapabilityOreCounter;
 import com.latenighters.infinidrill.capabilities.IOreCountHandler;
 import com.latenighters.infinidrill.capabilities.OreCountHandler;
+import com.latenighters.infinidrill.network.PacketHandler;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -42,6 +43,7 @@ public class InfiniDrill
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
         ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, InfiniDrillConfig.GENERAL_SPEC, "infinidrill-server.toml");
 
+        PacketHandler.register();
     }
 
     private void setup(final FMLCommonSetupEvent event){

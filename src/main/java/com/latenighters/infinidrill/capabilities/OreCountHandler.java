@@ -1,10 +1,14 @@
 package com.latenighters.infinidrill.capabilities;
 
 import com.latenighters.infinidrill.InfiniDrill;
+import com.latenighters.infinidrill.InfiniDrillConfig;
+import com.latenighters.infinidrill.network.PacketHandler;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
@@ -18,13 +22,18 @@ import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.network.NetworkEvent;
+import org.checkerframework.checker.units.qual.A;
+import org.checkerframework.checker.units.qual.C;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalField;
 import java.time.temporal.TemporalUnit;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
 import static com.latenighters.infinidrill.InfiniDrillConfig.getScanRadius;
 import static net.minecraft.tags.BlockTags.GOLD_ORES;
@@ -43,6 +52,8 @@ public class OreCountHandler implements IOreCountHandler, INBTSerializable<Compo
     private final int age_limit = 10;//in seconds
     private final int grace_period = 5; //in seconds
     private final int scanRadius = 2;
+
+    private final AtomicInteger clientCooldown = new AtomicInteger(0);
 
     public OreCountHandler(LevelChunk chunk) {
         this.chunk = chunk;
@@ -159,28 +170,45 @@ public class OreCountHandler implements IOreCountHandler, INBTSerializable<Compo
             runningScans.put(block, null);
         }
 
-        Set<BlockPos> toIgnore = new HashSet<>();
-        if(naturalOnly){
-            ChunkPos homePos = chunk.getPos();
-            for (int x=-getScanRadius(); x<=getScanRadius(); x++){
-                for(int z=-getScanRadius(); z<=getScanRadius(); z++){
-                    LevelChunk toAdd = chunk.getWorldForge().getChunk(homePos.x + x, homePos.z + z);
-                    if(toAdd.getWorldForge() != null) {
-                        toAdd.getCapability(CapabilityOreCounter.COUNTER).ifPresent(cap -> {
-                            toIgnore.addAll(cap.getPlacedOres());
-                        });
+        //if we are on a client, we need to request a scan from the server
+        if(this.chunk.getLevel().isClientSide()){
+
+            if(clientCooldown.get()>0){
+                clientCooldown.decrementAndGet();
+                return LazyOptional.empty();
+            }
+
+            PacketHandler.INSTANCE.sendToServer(new OreCountRequestPacket(block, this.chunk));
+
+            clientCooldown.set(4);  //200 ms wait for the packet
+            return LazyOptional.empty();
+        }
+
+        //otherwise we're the ones doing the scanning
+        else {
+            Set<BlockPos> toIgnore = new HashSet<>();
+            if (naturalOnly) {
+                ChunkPos homePos = chunk.getPos();
+                for (int x = -getScanRadius(); x <= getScanRadius(); x++) {
+                    for (int z = -getScanRadius(); z <= getScanRadius(); z++) {
+                        LevelChunk toAdd = chunk.getWorldForge().getChunk(homePos.x + x, homePos.z + z);
+                        if (toAdd.getWorldForge() != null) {
+                            toAdd.getCapability(CapabilityOreCounter.COUNTER).ifPresent(cap -> {
+                                toIgnore.addAll(cap.getPlacedOres());
+                            });
+                        }
                     }
                 }
             }
+
+            new OreFinderTask(getChunksToScan(), block, toIgnore).addCallback(count -> {
+                counts.put(block, count);
+                ages.put(block, LocalDateTime.now());
+                runningScans.put(block, null);
+            }).start();
+
+            return LazyOptional.empty();
         }
-
-        new OreFinderTask(getChunksToScan(), block, toIgnore).addCallback(count -> {
-            counts.put(block, count);
-            ages.put(block, LocalDateTime.now());
-            runningScans.put(block, null);
-        }).start();
-
-        return LazyOptional.empty();
     }
 
     private List<LevelChunk> getChunksToScan(){
@@ -200,5 +228,12 @@ public class OreCountHandler implements IOreCountHandler, INBTSerializable<Compo
     @Override
     public Set<BlockPos> getPlacedOres() {
         return placedOres;
+    }
+
+    public void setScanResult(Block block, Integer count){
+        counts.put(block, count);
+        ages.put(block, LocalDateTime.now());
+        runningScans.put(block, null);
+        clientCooldown.set(0);
     }
 }

@@ -12,4 +12,5 @@ public interface IOreCountHandler {
     public LazyOptional<Integer> lazyCountBlocksOfType(Block block, Boolean naturalOnly);
     public void markOrePlaced(BlockPos pos);
     public Set<BlockPos> getPlacedOres();
+    public void setScanResult(Block block, Integer count);
 }
