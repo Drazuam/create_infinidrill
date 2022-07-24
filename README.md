@@ -1,4 +1,4 @@
-# ![Thumbnail](https://github.com/IThundxr/create_infinidrill/blob/2b10d4126edcec0b61df96e074a49102da700246/src/main/resources/META-INF/637936068355887293.png) Create InfiniDrill
+# ![Thumbnail](https://github.com/Drazuam/create_infinidrill/blob/cc307d30aecc5a7e361c7c746bba654fb1b34421/src/main/resources/META-INF/637936068355887293.png) Create InfiniDrill
 Simple mod that adds a lightweight mixin to emulate the behavior of the Create hose pulley using the Create drill.  Recommended for use in combination with a [large ore veins generation mod](https://www.curseforge.com/minecraft/mc-mods/large-ore-deposits).
   
 ![Image](https://i.imgur.com/HbmOj65.png)
