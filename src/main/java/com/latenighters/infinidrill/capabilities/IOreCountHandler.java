@@ -13,4 +13,7 @@ public interface IOreCountHandler {
     public void markOrePlaced(BlockPos pos);
     public Set<BlockPos> getPlacedOres();
     public void setScanResult(Block block, Integer count);
+    public Boolean isNaturallyPlaced(BlockPos blockPos);
+    public int getPlacedSetHashcode();
+    public void setPlacedOres(Set<BlockPos> placedOres);
 }

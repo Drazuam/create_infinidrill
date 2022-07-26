@@ -1,8 +1,6 @@
 package com.latenighters.infinidrill.network;
 
-import com.latenighters.infinidrill.capabilities.OreCountHandler;
-import com.latenighters.infinidrill.capabilities.OreCountRequestPacket;
-import com.latenighters.infinidrill.capabilities.OreCountSyncPacket;
+import com.latenighters.infinidrill.capabilities.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
@@ -38,6 +36,19 @@ public class PacketHandler {
                 OreCountSyncPacket::encode,
                 OreCountSyncPacket::decode,
                 OreCountSyncPacket::handle);
+
+        INSTANCE.registerMessage(getIndex(),
+                OrePlacedHashPacket.class,
+                OrePlacedHashPacket::encode,
+                OrePlacedHashPacket::decode,
+                OrePlacedHashPacket::handle);
+
+        INSTANCE.registerMessage(getIndex(),
+                OrePlacedSetPacket.class,
+                OrePlacedSetPacket::encode,
+                OrePlacedSetPacket::decode,
+                OrePlacedSetPacket::handle);
+
     }
 
 

@@ -125,8 +125,15 @@ public abstract class MixinDrill extends BlockBreakingKineticTileEntity {
         if(!this.level.getBlockState(this.breakingPos).is(Tags.Blocks.ORES))
             return LazyOptional.of(()->false);
 
+
         AtomicReference<LazyOptional<Boolean>> infinite = new AtomicReference<>(LazyOptional.empty());
         this.containedChunk().getCapability(CapabilityOreCounter.COUNTER).ifPresent(oreCap -> {
+
+            if(InfiniDrillConfig.isNaturalOnly() && !oreCap.isNaturallyPlaced(this.breakingPos)){
+                infinite.set(LazyOptional.of(()->false));
+                return;
+            }
+
             Block target = level.getBlockState(this.breakingPos).getBlock();
             oreCap.lazyCountBlocksOfType(target, InfiniDrillConfig.isNaturalOnly()).ifPresent(count -> {
                 if(count > InfiniDrillConfig.getInfiniteOreThreshold()){
