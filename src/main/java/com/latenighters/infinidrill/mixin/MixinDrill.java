@@ -4,6 +4,8 @@ import com.latenighters.infinidrill.InfiniDrillConfig;
 import com.latenighters.infinidrill.capabilities.CapabilityOreCounter;
 import com.simibubi.create.content.contraptions.components.actors.BlockBreakingKineticTileEntity;
 import com.simibubi.create.content.contraptions.components.actors.DrillTileEntity;
+import com.simibubi.create.content.contraptions.relays.advanced.SpeedControllerTileEntity;
+import com.simibubi.create.content.contraptions.relays.encased.AdjustablePulleyTileEntity;
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.utility.VecHelper;
 import net.minecraft.core.BlockPos;
@@ -31,7 +33,13 @@ import java.util.concurrent.atomic.AtomicReference;
 @Mixin(DrillTileEntity.class)
 public abstract class MixinDrill extends BlockBreakingKineticTileEntity {
 
+    private Boolean isInfiniteState;
 
+    @Override
+    public void lazyTick() {
+        super.lazyTick();
+        this.isInfinite();  //forces the infinite check on lazy ticks for stress calculations
+    }
 
     public MixinDrill(BlockEntityType<?> typeIn, BlockPos pos, BlockState state) {
         super(typeIn, pos, state);
@@ -117,33 +125,56 @@ public abstract class MixinDrill extends BlockBreakingKineticTileEntity {
 
     private LazyOptional<Boolean> isInfinite(){
 
-        if(this.breakingPos==null) return LazyOptional.empty();
-
-        if(InfiniDrillConfig.getBlacklistedOres().contains(this.level.getBlockState(this.breakingPos).getBlock()))
-            return LazyOptional.of(()->false);
-
-        if(!this.level.getBlockState(this.breakingPos).is(Tags.Blocks.ORES))
-            return LazyOptional.of(()->false);
-
-
         AtomicReference<LazyOptional<Boolean>> infinite = new AtomicReference<>(LazyOptional.empty());
-        this.containedChunk().getCapability(CapabilityOreCounter.COUNTER).ifPresent(oreCap -> {
 
-            if(InfiniDrillConfig.isNaturalOnly() && !oreCap.isNaturallyPlaced(this.breakingPos)){
-                infinite.set(LazyOptional.of(()->false));
-                return;
-            }
+        if(this.breakingPos==null)
+            infinite.set(LazyOptional.empty());
 
-            Block target = level.getBlockState(this.breakingPos).getBlock();
-            oreCap.lazyCountBlocksOfType(target, InfiniDrillConfig.isNaturalOnly()).ifPresent(count -> {
-                if(count > InfiniDrillConfig.getInfiniteOreThreshold()){
-                    infinite.set(LazyOptional.of(()->true));
-                }else{
+        else if(InfiniDrillConfig.getBlacklistedOres().contains(this.level.getBlockState(this.breakingPos).getBlock()))
+            infinite.set(LazyOptional.of(()->false));
+
+        else if(!this.level.getBlockState(this.breakingPos).is(Tags.Blocks.ORES))
+            infinite.set(LazyOptional.of(()->false));
+
+        else{
+
+            this.containedChunk().getCapability(CapabilityOreCounter.COUNTER).ifPresent(oreCap -> {
+
+                if(InfiniDrillConfig.isNaturalOnly() && !oreCap.isNaturallyPlaced(this.breakingPos)){
                     infinite.set(LazyOptional.of(()->false));
+                    return;
                 }
+
+                Block target = level.getBlockState(this.breakingPos).getBlock();
+                oreCap.lazyCountBlocksOfType(target, InfiniDrillConfig.isNaturalOnly()).ifPresent(count -> {
+                    if(count > InfiniDrillConfig.getInfiniteOreThreshold()){
+                        infinite.set(LazyOptional.of(()->true));
+                    }else{
+                        infinite.set(LazyOptional.of(()->false));
+                    }
+                });
             });
+        }
+
+        infinite.get().ifPresent(a -> {
+            if(a!=isInfiniteState){
+                isInfiniteState = a;
+                updateRotation();
+            }
         });
+
         return infinite.get();
+    }
+
+    private void updateRotation(){
+        if(!this.level.isClientSide()) {
+            //hacky?  Hard to say.  Create doesn't seem to like dynamic stresses
+            this.detachKinetics();
+            this.getOrCreateNetwork().remove(this);
+            this.initialize();
+            this.attachKinetics();
+            this.setChanged();
+        }
     }
 
     @Override
@@ -163,11 +194,9 @@ public abstract class MixinDrill extends BlockBreakingKineticTileEntity {
     public float calculateStressApplied() {
         AtomicReference<Float> impact = new AtomicReference<>(super.calculateStressApplied());
 
-        isInfinite().ifPresent(inf -> {
-            if(inf){
-                impact.set((float) (impact.get() * InfiniDrillConfig.getStressMultiplier()));
-            }
-        });
+        if(isInfiniteState!=null && isInfiniteState){
+            impact.set((float) (impact.get() * InfiniDrillConfig.getStressMultiplier()));
+        }
 
         return impact.get();
     }
