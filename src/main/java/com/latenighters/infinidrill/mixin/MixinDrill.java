@@ -169,11 +169,13 @@ public abstract class MixinDrill extends BlockBreakingKineticTileEntity {
     private void updateRotation(){
         if(!this.level.isClientSide()) {
             //hacky?  Hard to say.  Create doesn't seem to like dynamic stresses
-            this.detachKinetics();
-            this.getOrCreateNetwork().remove(this);
-            this.initialize();
-            this.attachKinetics();
-            this.setChanged();
+            if(this.getOrCreateNetwork()!=null) {
+                this.detachKinetics();
+                this.getOrCreateNetwork().remove(this);
+                this.initialize();
+                this.attachKinetics();
+                this.setChanged();
+            }
         }
     }
 
