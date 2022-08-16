@@ -59,7 +59,6 @@ public class OreCountRequestPacket{
     }
 
     public static void handle(final OreCountRequestPacket msg, Supplier<NetworkEvent.Context> context){
-        Minecraft mc = Minecraft.getInstance();
         context.get().enqueueWork(()->{
 
             ServerLevel world = context.get().getSender().getLevel();

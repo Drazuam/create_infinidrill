@@ -2,7 +2,7 @@
   "required": true,
   "package": "com.latenighters.infinidrill.mixin",
   "compatibilityLevel": "JAVA_8",
-  "refmap": "customfluidmixin.refmap.json",
+  "refmap": "infinidrill.refmap.json",
   "mixins": [
     "MixinDrill"
   ],
