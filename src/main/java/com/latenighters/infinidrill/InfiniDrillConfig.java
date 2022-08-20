@@ -1,8 +1,16 @@
 package com.latenighters.infinidrill;
 
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.Tag;
+import net.minecraft.tags.TagKey;
+import net.minecraft.tags.TagManager;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.ForgeConfigSpec;
+import net.minecraftforge.common.Tags;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
@@ -11,12 +19,17 @@ import net.minecraftforge.registries.ForgeRegistries;
 import java.util.ArrayList;
 import java.util.List;
 
+import static net.minecraft.world.level.block.Blocks.IRON_ORE;
+
 @Mod.EventBusSubscriber
 public class InfiniDrillConfig{
 
     public static final ForgeConfigSpec GENERAL_SPEC;
     private static ForgeConfigSpec.IntValue infiniteOreThreshold;
+    private static ForgeConfigSpec.IntValue searchRadius;
     private static ForgeConfigSpec.ConfigValue<List<? extends String>> blacklistedOreNames;
+    private static ForgeConfigSpec.ConfigValue<List<? extends String>> equivalentOres;
+
     private static ForgeConfigSpec.BooleanValue naturalOnly;
 
     private static ForgeConfigSpec.DoubleValue speedMultiplier;
@@ -34,7 +47,7 @@ public class InfiniDrillConfig{
     private static void setupConfig(ForgeConfigSpec.Builder builder) {
         infiniteOreThreshold = builder
                 .comment("When the number of ores in a 5x5 chunk goes above this number, the vein is infinite")
-                .defineInRange("infinite_ore_threshold", 10000, 0, 1000000);
+                .defineInRange("infinite_ore_threshold", 6000, 0, 1000000);
         blacklistedOreNames = builder
                 .comment("The ores to be ignored by the infinite drill function")
                 .defineList("blacklisted_ores", List.of(), entry -> true);
@@ -47,6 +60,23 @@ public class InfiniDrillConfig{
         stressMultiplier = builder
                 .comment("This multiplier is added to the stress requirement of the drill when infini-drilling")
                 .defineInRange("stress_multiplier", 4, 0.01, 1024);
+        equivalentOres = builder
+                .comment("a list of tags for ores that should be considered equivalent to each other")
+                .defineList("equivalent_ore_tags", List.of(
+                        "forge:ores/iron",
+                        "forge:ores/coal",
+                        "forge:ores/copper",
+                        "forge:ores/diamond",
+                        "forge:ores/emerald",
+                        "forge:ores/gold",
+                        "forge:ores/lapis",
+                        "forge:ores/netherite_scrap",
+                        "forge:ores/quartz",
+                        "forge:ores/redstone"), entry->true);
+        searchRadius = builder
+                .comment("the radius to scan for ores, in chunks.  Radius 2 results in a 5x5 chunk area")
+                .defineInRange("scan_radius", 2, 0, 7);
+
     }
 
     @SubscribeEvent
@@ -68,6 +98,30 @@ public class InfiniDrillConfig{
                 blacklistedOres.add(ForgeRegistries.BLOCKS.getValue(rsl));
             }
         });
+
+
+
+    }
+
+    private static List<TagKey<Block>> getEquivalentOreTags(){
+        List<TagKey<Block>> retVal = new ArrayList<>();
+        equivalentOres.get().forEach(tagString -> {
+            if(!tagString.contains(":"))return;
+            retVal.add(BlockTags.create(new ResourceLocation(tagString)));
+        });
+        return retVal;
+    }
+
+    public static List<TagKey<Block>> getTagsFor(BlockState blockState){
+        List<TagKey<Block>> retval = new ArrayList<>();
+        List<TagKey<Block>> tagKeyList = getEquivalentOreTags();
+
+        tagKeyList.forEach(tagKey -> {
+            if(blockState.is(tagKey))
+                retval.add(tagKey);
+        });
+
+        return retval;
     }
 
     public static Integer getInfiniteOreThreshold() {
@@ -91,6 +145,7 @@ public class InfiniDrillConfig{
     }
 
     public static Integer getScanRadius(){
-        return 2;
+        return searchRadius.get();
     }
+
 }

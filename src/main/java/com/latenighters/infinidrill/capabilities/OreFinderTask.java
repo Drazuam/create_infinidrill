@@ -2,7 +2,9 @@ package com.latenighters.infinidrill.capabilities;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
+import com.latenighters.infinidrill.InfiniDrillConfig;
 import net.minecraft.core.BlockPos;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
@@ -26,6 +28,7 @@ public class OreFinderTask extends Thread {
     private final AtomicInteger count = new AtomicInteger(0);
     private final AtomicBoolean cancelled = new AtomicBoolean(false);
     private final Set<BlockPos> ignoreList;
+    private final List<TagKey<Block>> tags;
 
     public void cancel() {
         cancelled.set(true);
@@ -48,6 +51,8 @@ public class OreFinderTask extends Thread {
             this.ignoreList = ignoreList;
         else
             this.ignoreList = new HashSet<>();
+
+        tags = InfiniDrillConfig.getTagsFor(target.defaultBlockState());
     }
 
     public OreFinderTask(List<LevelChunk> chunks, Block target) {
@@ -57,6 +62,9 @@ public class OreFinderTask extends Thread {
     @Override
     public void run() {
 
+
+        List<Block> cachedNonMatch = new ArrayList<>();
+        List<Block> cachedMatch = new ArrayList<>();
 
         for (LevelChunk chunk:chunks) {
             BlockPos chunkPos = chunk.getPos().getWorldPosition();
@@ -68,9 +76,44 @@ public class OreFinderTask extends Thread {
                 for(int x=0; x<16; x++){
                     for(int z=0; z<16; z++){
                         BlockState blockState = chunk.getBlockState(new BlockPos(x, y, z));
-                        if(blockState.getBlock().equals(target))
-                            if(!ignoreList.contains((new BlockPos(x, y, z)).offset(chunkPos)))
+
+                        //check if we've already matched this block
+                        if(cachedMatch.contains(blockState.getBlock())){
+                            if (!ignoreList.contains((new BlockPos(x, y, z)).offset(chunkPos)))
                                 count.getAndIncrement();
+                        }
+
+                        //also check if we've already denied this block
+                        else if(cachedNonMatch.contains(blockState.getBlock())){
+                            //do  nothing
+                        }
+
+                        //if we haven't seen it, check if it's a match and update the cache
+                        else if(blockState.getBlock().equals(target)) {
+                            if (!ignoreList.contains((new BlockPos(x, y, z)).offset(chunkPos))) {
+                                count.getAndIncrement();
+                                cachedMatch.add(blockState.getBlock());
+                            }
+                            else{
+                                cachedNonMatch.add(blockState.getBlock());
+                            }
+                        }
+
+                        //if it's not a direct match, check the equivalent tags
+                        else{
+                            AtomicBoolean tagMatch = new AtomicBoolean(false);
+                            tags.forEach(blockTagKey -> {
+                                if (blockState.is(blockTagKey))
+                                    tagMatch.set(true);
+                            });
+                            if (tagMatch.get() && !ignoreList.contains((new BlockPos(x, y, z)).offset(chunkPos))) {
+                                count.getAndIncrement();
+                                cachedMatch.add(blockState.getBlock());
+                            }
+                            else{
+                                cachedNonMatch.add(blockState.getBlock());
+                            }
+                        }
                     }
                 }
             }

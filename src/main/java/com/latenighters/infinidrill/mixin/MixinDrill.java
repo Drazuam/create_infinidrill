@@ -7,11 +7,15 @@ import com.simibubi.create.content.contraptions.components.actors.DrillTileEntit
 import com.simibubi.create.content.contraptions.relays.advanced.SpeedControllerTileEntity;
 import com.simibubi.create.content.contraptions.relays.encased.AdjustablePulleyTileEntity;
 import com.simibubi.create.foundation.item.TooltipHelper;
+import com.simibubi.create.foundation.utility.Lang;
 import com.simibubi.create.foundation.utility.VecHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
@@ -29,6 +33,8 @@ import org.spongepowered.asm.mixin.Mixin;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+
+import static net.minecraft.world.level.block.Blocks.IRON_ORE;
 
 @Mixin(DrillTileEntity.class)
 public abstract class MixinDrill extends BlockBreakingKineticTileEntity {
@@ -51,6 +57,14 @@ public abstract class MixinDrill extends BlockBreakingKineticTileEntity {
         this.isInfinite().ifPresent(isCurrentlyInfinite->{
            if(isCurrentlyInfinite)
                TooltipHelper.addHint(tooltip, "hint.infinite_drill");
+           if(isPlayerSneaking && level.getBlockState(this.breakingPos).is(Tags.Blocks.ORES)){
+               this.containedChunk().getCapability(CapabilityOreCounter.COUNTER).ifPresent(oreCap -> {
+
+                   Block target = level.getBlockState(this.breakingPos).getBlock();
+                   Integer found = oreCap.countBlocksOfType(target, InfiniDrillConfig.isNaturalOnly());
+                   Lang.translate("gui.goggles.ore_count_stats", new Object[0]).add(Lang.number(found)).forGoggles(tooltip);
+               });
+           }
         });
         return addToGoggleTooltip;
     }
@@ -124,7 +138,6 @@ public abstract class MixinDrill extends BlockBreakingKineticTileEntity {
     }
 
     private LazyOptional<Boolean> isInfinite(){
-
         AtomicReference<LazyOptional<Boolean>> infinite = new AtomicReference<>(LazyOptional.empty());
 
         if(this.breakingPos==null)
