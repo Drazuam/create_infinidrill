@@ -4,7 +4,6 @@ import com.latenighters.infinidrill.capabilities.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
-import org.checkerframework.checker.units.qual.A;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

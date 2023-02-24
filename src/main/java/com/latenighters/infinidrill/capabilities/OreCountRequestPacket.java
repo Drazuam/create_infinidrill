@@ -2,7 +2,6 @@ package com.latenighters.infinidrill.capabilities;
 
 import com.latenighters.infinidrill.InfiniDrillConfig;
 import com.latenighters.infinidrill.network.PacketHandler;
-import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.FriendlyByteBuf;

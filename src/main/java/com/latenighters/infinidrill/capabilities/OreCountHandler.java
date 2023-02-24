@@ -1,43 +1,29 @@
 package com.latenighters.infinidrill.capabilities;
 
-import com.latenighters.infinidrill.InfiniDrill;
-import com.latenighters.infinidrill.InfiniDrillConfig;
 import com.latenighters.infinidrill.network.PacketHandler;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.event.world.BlockEvent;
-import net.minecraftforge.event.world.ChunkEvent;
+import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.network.NetworkEvent;
-import org.checkerframework.checker.units.qual.A;
-import org.checkerframework.checker.units.qual.C;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalField;
-import java.time.temporal.TemporalUnit;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
-import java.util.function.Supplier;
 
 import static com.latenighters.infinidrill.InfiniDrillConfig.getScanRadius;
-import static net.minecraft.tags.BlockTags.GOLD_ORES;
 
 @Mod.EventBusSubscriber
 public class OreCountHandler implements IOreCountHandler, INBTSerializable<CompoundTag> {
@@ -60,7 +46,6 @@ public class OreCountHandler implements IOreCountHandler, INBTSerializable<Compo
     private final int CLIENT_PLACED_ORES_UPDATE_RATE = 3; //in seconds
     private final int age_limit = 10;//in seconds
     private final int grace_period = 5; //in seconds
-    private final int scanRadius = 2;
 
     private final AtomicInteger clientCooldown = new AtomicInteger(0);
 
@@ -79,7 +64,7 @@ public class OreCountHandler implements IOreCountHandler, INBTSerializable<Compo
         //if(event.getWorld().isClientSide()) return;
         if(!event.getPlacedBlock().is(Tags.Blocks.ORES)) return;
 
-        ServerLevel level = (ServerLevel) event.getWorld();
+        ServerLevel level = (ServerLevel) event.getLevel();
         LevelChunk chunk = level.getChunkAt(event.getPos());
 
         chunk.getCapability(CapabilityOreCounter.COUNTER).ifPresent(cap -> {
