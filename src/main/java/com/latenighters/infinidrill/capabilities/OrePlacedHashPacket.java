@@ -1,24 +1,17 @@
 package com.latenighters.infinidrill.capabilities;
 
-import com.latenighters.infinidrill.InfiniDrillConfig;
 import com.latenighters.infinidrill.network.PacketHandler;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
-import org.checkerframework.checker.units.qual.C;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Supplier;
 

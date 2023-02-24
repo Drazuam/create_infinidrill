@@ -1,17 +1,11 @@
 package com.latenighters.infinidrill.capabilities;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListenableFutureTask;
 import com.latenighters.infinidrill.InfiniDrillConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
-import org.apache.http.concurrent.BasicFuture;
-import org.checkerframework.checker.units.qual.A;
-import org.jetbrains.annotations.NotNull;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
