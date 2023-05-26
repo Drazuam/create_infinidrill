@@ -77,7 +77,7 @@ public class OreCountHandler implements IOreCountHandler, INBTSerializable<Compo
     @SubscribeEvent
     public static void onBlockPlace(BlockEvent.EntityPlaceEvent event){
         //if(event.getWorld().isClientSide()) return;
-        if(!event.getPlacedBlock().is(Tags.Blocks.ORES)) return;
+        if(!InfiniDrillConfig.canBeInfinite(event.getPlacedBlock())) return;
 
         ServerLevel level = (ServerLevel) event.getWorld();
         LevelChunk chunk = level.getChunkAt(event.getPos());
