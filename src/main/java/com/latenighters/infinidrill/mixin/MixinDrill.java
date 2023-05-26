@@ -2,8 +2,8 @@ package com.latenighters.infinidrill.mixin;
 
 import com.latenighters.infinidrill.InfiniDrillConfig;
 import com.latenighters.infinidrill.capabilities.CapabilityOreCounter;
-import com.simibubi.create.content.contraptions.components.actors.BlockBreakingKineticTileEntity;
-import com.simibubi.create.content.contraptions.components.actors.DrillTileEntity;
+import com.simibubi.create.content.kinetics.base.BlockBreakingKineticBlockEntity;
+import com.simibubi.create.content.kinetics.drill.DrillBlockEntity;
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.utility.Lang;
 import com.simibubi.create.foundation.utility.VecHelper;
@@ -29,8 +29,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-@Mixin(DrillTileEntity.class)
-public abstract class MixinDrill extends BlockBreakingKineticTileEntity {
+@Mixin(DrillBlockEntity.class)
+public abstract class MixinDrill extends BlockBreakingKineticBlockEntity {
 
     private Boolean isInfiniteState;
 
@@ -50,7 +50,7 @@ public abstract class MixinDrill extends BlockBreakingKineticTileEntity {
         this.isInfinite().ifPresent(isCurrentlyInfinite->{
            if(isCurrentlyInfinite)
                TooltipHelper.addHint(tooltip, "hint.infinite_drill");
-           if(isPlayerSneaking && level.getBlockState(this.breakingPos).is(Tags.Blocks.ORES)){
+           if(isPlayerSneaking && InfiniDrillConfig.canBeInfinite(level.getBlockState(this.breakingPos))){
                this.containedChunk().getCapability(CapabilityOreCounter.COUNTER).ifPresent(oreCap -> {
 
                    Block target = level.getBlockState(this.breakingPos).getBlock();
@@ -139,7 +139,7 @@ public abstract class MixinDrill extends BlockBreakingKineticTileEntity {
         else if(InfiniDrillConfig.getBlacklistedOres().contains(this.level.getBlockState(this.breakingPos).getBlock()))
             infinite.set(LazyOptional.of(()->false));
 
-        else if(!this.level.getBlockState(this.breakingPos).is(Tags.Blocks.ORES))
+        else if(!InfiniDrillConfig.canBeInfinite(this.level.getBlockState(this.breakingPos)))
             infinite.set(LazyOptional.of(()->false));
 
         else{
