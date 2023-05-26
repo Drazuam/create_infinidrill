@@ -2,20 +2,15 @@ package com.latenighters.infinidrill.mixin;
 
 import com.latenighters.infinidrill.InfiniDrillConfig;
 import com.latenighters.infinidrill.capabilities.CapabilityOreCounter;
-import com.simibubi.create.content.contraptions.components.actors.BlockBreakingKineticTileEntity;
-import com.simibubi.create.content.contraptions.components.actors.DrillTileEntity;
-import com.simibubi.create.content.contraptions.relays.advanced.SpeedControllerTileEntity;
-import com.simibubi.create.content.contraptions.relays.encased.AdjustablePulleyTileEntity;
+import com.simibubi.create.content.kinetics.base.BlockBreakingKineticBlockEntity;
+import com.simibubi.create.content.kinetics.drill.DrillBlockEntity;
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.utility.Lang;
 import com.simibubi.create.foundation.utility.VecHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
@@ -34,10 +29,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static net.minecraft.world.level.block.Blocks.IRON_ORE;
-
-@Mixin(DrillTileEntity.class)
-public abstract class MixinDrill extends BlockBreakingKineticTileEntity {
+@Mixin(DrillBlockEntity.class)
+public abstract class MixinDrill extends BlockBreakingKineticBlockEntity {
 
     private Boolean isInfiniteState;
 
@@ -57,7 +50,7 @@ public abstract class MixinDrill extends BlockBreakingKineticTileEntity {
         this.isInfinite().ifPresent(isCurrentlyInfinite->{
            if(isCurrentlyInfinite)
                TooltipHelper.addHint(tooltip, "hint.infinite_drill");
-           if(isPlayerSneaking && level.getBlockState(this.breakingPos).is(Tags.Blocks.ORES)){
+           if(isPlayerSneaking && InfiniDrillConfig.canBeInfinite(level.getBlockState(this.breakingPos))){
                this.containedChunk().getCapability(CapabilityOreCounter.COUNTER).ifPresent(oreCap -> {
 
                    Block target = level.getBlockState(this.breakingPos).getBlock();
@@ -146,7 +139,7 @@ public abstract class MixinDrill extends BlockBreakingKineticTileEntity {
         else if(InfiniDrillConfig.getBlacklistedOres().contains(this.level.getBlockState(this.breakingPos).getBlock()))
             infinite.set(LazyOptional.of(()->false));
 
-        else if(!this.level.getBlockState(this.breakingPos).is(Tags.Blocks.ORES))
+        else if(!InfiniDrillConfig.canBeInfinite(this.level.getBlockState(this.breakingPos)))
             infinite.set(LazyOptional.of(()->false));
 
         else{

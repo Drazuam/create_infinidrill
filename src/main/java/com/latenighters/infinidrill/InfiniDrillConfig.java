@@ -1,16 +1,11 @@
 package com.latenighters.infinidrill;
 
-import net.minecraft.core.Registry;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.Tag;
 import net.minecraft.tags.TagKey;
-import net.minecraft.tags.TagManager;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.common.Tags;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
@@ -18,8 +13,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static net.minecraft.world.level.block.Blocks.IRON_ORE;
+import java.util.Optional;
 
 @Mod.EventBusSubscriber
 public class InfiniDrillConfig{
@@ -27,6 +21,7 @@ public class InfiniDrillConfig{
     public static final ForgeConfigSpec GENERAL_SPEC;
     private static ForgeConfigSpec.IntValue infiniteOreThreshold;
     private static ForgeConfigSpec.IntValue searchRadius;
+    private static ForgeConfigSpec.ConfigValue<String> canBeInfiniteTag;
     private static ForgeConfigSpec.ConfigValue<List<? extends String>> blacklistedOreNames;
     private static ForgeConfigSpec.ConfigValue<List<? extends String>> equivalentOres;
 
@@ -45,6 +40,10 @@ public class InfiniDrillConfig{
     }
 
     private static void setupConfig(ForgeConfigSpec.Builder builder) {
+        canBeInfiniteTag = builder
+                .comment("Block tag that can be drilled infinitely.",
+                        "It is assumed to always be ores, but you can set it to any block tag you want and it will work.")
+                .define("can_be_infinite_tag", "forge:ores");
         infiniteOreThreshold = builder
                 .comment("When the number of ores in a 5x5 chunk goes above this number, the vein is infinite")
                 .defineInRange("infinite_ore_threshold", 6000, 0, 1000000);
@@ -122,6 +121,11 @@ public class InfiniDrillConfig{
         });
 
         return retval;
+    }
+
+    public static boolean canBeInfinite(BlockState state) {
+        String tagString = canBeInfiniteTag.get();
+        return tagString.contains(":") && state.is(BlockTags.create(new ResourceLocation(tagString)));
     }
 
     public static Integer getInfiniteOreThreshold() {
