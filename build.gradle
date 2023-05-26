@@ -19,7 +19,7 @@ apply plugin: 'net.minecraftforge.gradle'
 // MixinGradle:
 apply plugin: 'org.spongepowered.mixin'
 
-version = '1.1.6'
+version = '1.1.7'
 group = 'com.latenighters.infinidrill' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'infinidrill'
 
@@ -181,8 +181,9 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
 
-    implementation fg.deobf("curse.maven:create-328085:4371809")
-
+    implementation fg.deobf("com.simibubi.create:create-1.19.2:0.5.1.b-30:slim") { transitive = false }
+    implementation fg.deobf("com.jozufozu.flywheel:flywheel-forge-1.19.2:0.6.8.a-14")
+    implementation fg.deobf("com.tterrag.registrate:Registrate:MC1.19-1.1.5")
 }
 
 // Example for how to get properties into the manifest for reading at runtime.

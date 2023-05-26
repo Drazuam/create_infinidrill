@@ -2,8 +2,8 @@ package com.latenighters.infinidrill.mixin;
 
 import com.latenighters.infinidrill.InfiniDrillConfig;
 import com.latenighters.infinidrill.capabilities.CapabilityOreCounter;
-import com.simibubi.create.content.contraptions.components.actors.BlockBreakingKineticTileEntity;
-import com.simibubi.create.content.contraptions.components.actors.DrillTileEntity;
+import com.simibubi.create.content.kinetics.base.BlockBreakingKineticBlockEntity;
+import com.simibubi.create.content.kinetics.drill.DrillBlockEntity;
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.utility.Lang;
 import com.simibubi.create.foundation.utility.VecHelper;
@@ -29,8 +29,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-@Mixin(DrillTileEntity.class)
-public abstract class MixinDrill extends BlockBreakingKineticTileEntity {
+@Mixin(DrillBlockEntity.class)
+public abstract class MixinDrill extends BlockBreakingKineticBlockEntity {
 
     private Boolean isInfiniteState;
 
