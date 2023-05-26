@@ -1,5 +1,6 @@
 package com.latenighters.infinidrill.capabilities;
 
+import com.latenighters.infinidrill.InfiniDrillConfig;
 import com.latenighters.infinidrill.network.PacketHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -9,7 +10,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.level.BlockEvent;
@@ -62,7 +62,7 @@ public class OreCountHandler implements IOreCountHandler, INBTSerializable<Compo
     @SubscribeEvent
     public static void onBlockPlace(BlockEvent.EntityPlaceEvent event){
         //if(event.getWorld().isClientSide()) return;
-        if(!event.getPlacedBlock().is(Tags.Blocks.ORES)) return;
+        if(!InfiniDrillConfig.canBeInfinite(event.getPlacedBlock())) return;
 
         ServerLevel level = (ServerLevel) event.getLevel();
         LevelChunk chunk = level.getChunkAt(event.getPos());

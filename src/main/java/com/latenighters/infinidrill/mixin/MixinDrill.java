@@ -50,7 +50,7 @@ public abstract class MixinDrill extends BlockBreakingKineticBlockEntity {
         this.isInfinite().ifPresent(isCurrentlyInfinite->{
            if(isCurrentlyInfinite)
                TooltipHelper.addHint(tooltip, "hint.infinite_drill");
-           if(isPlayerSneaking && level.getBlockState(this.breakingPos).is(Tags.Blocks.ORES)){
+           if(isPlayerSneaking && InfiniDrillConfig.canBeInfinite(level.getBlockState(this.breakingPos))){
                this.containedChunk().getCapability(CapabilityOreCounter.COUNTER).ifPresent(oreCap -> {
 
                    Block target = level.getBlockState(this.breakingPos).getBlock();
@@ -139,7 +139,7 @@ public abstract class MixinDrill extends BlockBreakingKineticBlockEntity {
         else if(InfiniDrillConfig.getBlacklistedOres().contains(this.level.getBlockState(this.breakingPos).getBlock()))
             infinite.set(LazyOptional.of(()->false));
 
-        else if(!this.level.getBlockState(this.breakingPos).is(Tags.Blocks.ORES))
+        else if(!InfiniDrillConfig.canBeInfinite(this.level.getBlockState(this.breakingPos)))
             infinite.set(LazyOptional.of(()->false));
 
         else{
